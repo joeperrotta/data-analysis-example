@@ -6,3 +6,4 @@ pandas
 click==8
 altair
 numpy
+plotly

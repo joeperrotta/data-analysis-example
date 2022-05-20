@@ -9,8 +9,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.mixture import GaussianMixture
-from pylab import concatenate, normal
+from numpy.random import normal
 from functools import cache
+import plotly.express as px
+from plotly.subplots import make_subplots
 
 st.set_page_config(
     layout="centered", page_icon="JP️", page_title="Data Analysis App"
@@ -74,6 +76,31 @@ with st.echo("below"):
     st.altair_chart(chart2, use_container_width=True)
 
     st.write("As shown in the images, as time on page increases revenue decreases ")
+
+    x_col = "top"
+    y_col = "revenue"
+    df["site"] = df["site"].astype(str)  # Help plotly see this as categorical
+    data = df.to_dict()
+    x_data = df[x_col]
+    x_limits = [x_data.min(), x_data.max()]
+    y_data = df[y_col]
+    y_limits = [y_data.min(), y_data.max()]
+    for col in ["browser", "platform", "site"]:
+        fig = px.scatter(
+            data,
+            x=x_col,
+            y=y_col,
+            labels={
+                x_col: "Time on Page (s)",
+                y_col: "Revenue ($)",
+                col: col,
+            },
+            color=col,
+            title=f"Time on Page v. Revenue, by {col}",
+        )
+        fig.update_xaxes(range=x_limits)
+        fig.update_yaxes(range=y_limits)
+        st.plotly_chart(fig, use_container_width=True)  # , height=400)
 
     st.title("PandasProfiling EDA and Statistical Analysis")
     st.write("Using the Python package PandasProfiling we're able to quickly analyze the dataset and discover insights. ")
