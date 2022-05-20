@@ -5,7 +5,6 @@ from st_aggrid.shared import GridUpdateMode
 from pandas_profiling import ProfileReport
 from streamlit_pandas_profiling import st_profile_report
 import altair as alt
-import numpy as np
 import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.mixture import GaussianMixture
@@ -13,6 +12,8 @@ from numpy.random import normal
 from functools import cache
 import plotly.express as px
 from plotly.subplots import make_subplots
+from itertools import combinations
+
 
 st.set_page_config(
     layout="centered", page_icon="JP️", page_title="Data Analysis App"
@@ -63,58 +64,110 @@ with st.echo("below"):
         st.write("You selected:")
         st.json(selection["selected_rows"])
 
-    st.title("Time On Page & Revenue:")
+    st.write("Part A: Time On Page & Revenue:")
 
-    df_rev_top = df[["revenue", "top"]]
+    with st.expander("Images & Insight", expanded=False):
+        df_rev_top = df[["revenue", "top"]]
 
-    chart1 = alt.Chart(df_rev_top).mark_circle().encode(
-         x='top', y='revenue', tooltip=['revenue', 'top',])
-    st.altair_chart(chart1, use_container_width=True)
+        chart1 = alt.Chart(df_rev_top).mark_circle().encode(
+             x='top', y='revenue', tooltip=['revenue', 'top',])
+        st.altair_chart(chart1, use_container_width=True)
 
-    chart2 = alt.Chart(df_rev_top).mark_circle().encode(
-         x='revenue', y='top', tooltip=['revenue', 'top',])
-    st.altair_chart(chart2, use_container_width=True)
+        chart2 = alt.Chart(df_rev_top).mark_circle().encode(
+             x='revenue', y='top', tooltip=['revenue', 'top',])
+        st.altair_chart(chart2, use_container_width=True)
 
-    st.write("As shown in the images, as time on page increases revenue decreases ")
+        st.write("At a glance, the images indicate that as time on page increases revenue decreases ")
 
-    x_col = "top"
-    y_col = "revenue"
-    df["site"] = df["site"].astype(str)  # Help plotly see this as categorical
-    data = df.to_dict()
-    x_data = df[x_col]
-    x_limits = [x_data.min(), x_data.max()]
-    y_data = df[y_col]
-    y_limits = [y_data.min(), y_data.max()]
-    for col in ["browser", "platform", "site"]:
-        fig = px.scatter(
-            data,
-            x=x_col,
-            y=y_col,
-            labels={
-                x_col: "Time on Page (s)",
-                y_col: "Revenue ($)",
-                col: col,
-            },
-            color=col,
-            title=f"Time on Page v. Revenue, by {col}",
-        )
-        fig.update_xaxes(range=x_limits)
-        fig.update_yaxes(range=y_limits)
-        st.plotly_chart(fig, use_container_width=True)  # , height=400)
+    st.write("Part B: Time on Page & Revenue When Controlling for Other Variables")
 
-    st.title("PandasProfiling EDA and Statistical Analysis")
-    st.write("Using the Python package PandasProfiling we're able to quickly analyze the dataset and discover insights. ")
-    st.write("The HTML report provides an overview of the data as well as several correlation metrics. ")
-    st.write("Time on Page is highly correlated to Platform and Browser is highly correlated to Revenue. ")
-    st.write("Other insights include:")
-    st.image("correlations.png")
+    with st.expander("Image Combinations and Insights", expanded=False):
 
-    @cache
-    def generate_report():
-        return ProfileReport(df, title="PandasProfiling Report", explorative=True)
-    pr = generate_report()
+        st.write("Image Plots are Interactive!")
 
-    with st.expander("View in Depth Analysis", expanded=False):
+        st.write("These images unveil a different relationship between ToP and Revenue. They show that Revenue increases when ToP increases")
+
+        use_df = df.copy()
+        use_df["site"] = use_df["site"].astype(str)  # Help plotly see this as categorical
+        x_col = "top"
+        y_col = "revenue"
+        x_data = df[x_col]
+        y_data = df[y_col]
+        x_limits = [x_data.min(), x_data.max()]
+        y_limits = [y_data.min(), y_data.max()]
+
+        # Produce combinations of columns
+        base_cols = ["browser", "platform", "site"]
+        cols = base_cols.copy()
+
+
+        def combine_columns(columns):
+            new_col = None
+            for col in columns:
+                this_part = f"{col}=" + use_df[col]
+                if new_col is None:
+                    new_col = this_part
+                else:
+                    new_col += ", " + this_part
+            new_col_name = " & ".join(columns)
+            use_df[new_col_name] = new_col
+            cols.append(new_col_name)
+
+
+        # Make new column representing each pair of columns
+        for col_pair in combinations(base_cols, 2):
+            combine_columns(col_pair)
+
+        # Make new column representing each unique set of possibility
+        combine_columns(base_cols)
+
+        data = use_df.to_dict()
+
+
+        def generate_plots(col):
+            fig = px.scatter(
+                data,
+                x=x_col,
+                y=y_col,
+                labels={
+                    x_col: "Time on Page",
+                    y_col: "Revenue ($)",
+                    col: "",  # col,
+                },
+                color=col,
+                title=f"Time on Page v. Revenue, by {col}",
+            )
+            fig.update_xaxes(range=x_limits)
+            fig.update_yaxes(range=y_limits)
+            st.plotly_chart(fig, use_container_width=True)
+
+
+        for col in cols:
+            generate_plots(col)
+
+
+    st.markdown(
+        """
+        # PandasProfiling EDA and Statistical Analysis
+
+        Using the Python package PandasProfiling we're able to quickly analyze the dataset and discover some insights.
+
+        The HTML report provides an overview of the data as well as several correlation metrics.
+
+        Time on Page is highly correlated to Platform and Browser is highly correlated to Revenue.
+
+        Open the Expander below to see the full report:
+        """
+    )
+
+    with st.expander("Show Full Report", expanded=False):
+        st.image("correlations.png")
+
+        @cache
+        def generate_report():
+            return ProfileReport(df, title="PandasProfiling Report", explorative=True)
+        pr = generate_report()
+
         st_profile_report(pr)
 
 
