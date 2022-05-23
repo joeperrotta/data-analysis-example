@@ -11,7 +11,6 @@ from sklearn.mixture import GaussianMixture
 from numpy.random import normal
 from functools import cache
 import plotly.express as px
-from plotly.subplots import make_subplots
 from itertools import combinations
 
 
