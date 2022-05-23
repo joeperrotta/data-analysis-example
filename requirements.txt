@@ -1,4 +1,3 @@
-pylab
 scikit-learn
 streamlit-aggrid
 streamlit
