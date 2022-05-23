@@ -16,16 +16,11 @@ from itertools import combinations
 
 
 st.set_page_config(
-    layout="centered", page_icon="JP️", page_title="Data Analysis App"
+    layout="centered", page_icon="https://mma.prnewswire.com/media/1638770/CAFEMEDIA_LOGO.jpg", page_title="Data Analysis, CafeMedia"
 )
 with st.echo("below"):
-    st.title("Data Analysis App")
-    # st.write(
-    #     """This app shows how you can use the [streamlit-aggrid](STREAMLIT_AGGRID_URL)
-    #     Streamlit component in an interactive way so as to display additional content
-    #     based on user click."""
-    # )
-
+    st.title("Data Analysis, CafeMedia")
+    st.write("By: Joseph Perrotta")
 
     st.title("Part 1: Data Table")
 
@@ -64,7 +59,7 @@ with st.echo("below"):
         st.write("You selected:")
         st.json(selection["selected_rows"])
 
-    st.write("Part A: Time On Page & Revenue:")
+    st.write("Part 1A: Time On Page & Revenue:")
 
     with st.expander("Images & Insight", expanded=False):
         df_rev_top = df[["revenue", "top"]]
@@ -79,13 +74,14 @@ with st.echo("below"):
 
         st.write("At a glance, the images indicate that as time on page increases revenue decreases ")
 
-    st.write("Part B: Time on Page & Revenue When Controlling for Other Variables")
+    st.write("Part 1B: Time on Page & Revenue When Controlling for Other Variables")
 
     with st.expander("Image Combinations and Insights", expanded=False):
 
+        st.write("These images unveil a different relationship between ToP and Revenue. When controlling for other variables it shows that Revenue generally increases as ToP increases")
+
         st.write("Image Plots are Interactive!")
 
-        st.write("These images unveil a different relationship between ToP and Revenue. They show that Revenue increases when ToP increases")
 
         use_df = df.copy()
         use_df["site"] = use_df["site"].astype(str)  # Help plotly see this as categorical
@@ -148,7 +144,7 @@ with st.echo("below"):
 
     st.markdown(
         """
-        # PandasProfiling EDA and Statistical Analysis
+        PandasProfiling EDA and Statistical Analysis:
 
         Using the Python package PandasProfiling we're able to quickly analyze the dataset and discover some insights.
 
@@ -160,8 +156,11 @@ with st.echo("below"):
         """
     )
 
+    st.image("correlations.png")
+
     with st.expander("Show Full Report", expanded=False):
-        st.image("correlations.png")
+
+        st.write("The report is interactive! Click in each section to see more details.")
 
         @cache
         def generate_report():
@@ -171,10 +170,7 @@ with st.echo("below"):
         st_profile_report(pr)
 
 
-
-
-
-    st.title("Part 2: Distribution")
+    st.title("Part 2: Bimodal Distribution")
 
     # First normal distribution parameters
     mu1 = 1
@@ -209,8 +205,21 @@ with st.echo("below"):
         y="count()",
     ))
 
+    @st.cache
+    def convert_df(df):
+        return df.to_csv(index=False).encode('utf-8')
+
+    csv = convert_df(df)
+
+    st.download_button(
+        label="Download data as CSV",
+        data=csv,
+        file_name='Bimodal_Dist_JP.csv',
+        mime='text/csv',
+    )
+
     with st.expander("Data Points for Distribution", expanded=False):
-        st.table(X)
+        st.table(df)
 
     st.title("Code for App")
 
